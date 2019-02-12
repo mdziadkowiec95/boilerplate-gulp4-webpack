@@ -1,6 +1,8 @@
 module.exports = {
   mode: 'production',
+  entry: './src/js/index.js',
   output: {
+    publicPath: 'dist',
     filename: 'bundle.js',
   },
   watch: false,

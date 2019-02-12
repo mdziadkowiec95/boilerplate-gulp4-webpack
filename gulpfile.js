@@ -4,6 +4,7 @@ const del = require('del');
 const sass = require('gulp-sass');
 const autoprefixer = require('gulp-autoprefixer');
 const sourcemaps = require('gulp-sourcemaps');
+const cssnano = require('gulp-cssnano');
 const browsersync = require("browser-sync").create();
 
 const webpack = require('webpack');
@@ -20,7 +21,7 @@ const css = {
   out: source + 'css',
   build: dist + 'css',
   sassOptions: {
-    outputStyle: 'compressed',
+    // outputStyle: 'compressed',
     errLogToConsole: true
   },
   watch: source + "sass/**/*.scss"
@@ -61,45 +62,59 @@ function styles(cb) {
   cb()
 }
 
-function jsDev(cb) {
-  webpack(require(webpackConfigDev), function (err, stats) {
-    if (err) throw err;
-    console.log(stats.toString());
-    cb();
-    browsersync.reload();
-  })
-}
+
 
 function jsProd(cb) {
-  webpack(require(webpackConfigProd), function (err, stats) {
-    if (err) throw err;
-    console.log(stats.toString());
-    cb();
-    browsersync.reload();
-  })
+  src('src/js/index.js')
+    .pipe(webpackStream(webpackConfigProd), webpack)
+    .pipe(dest('dist/js'))
+  cb()
 }
 
-// function jsDev(cb) {
-//   src('src/js/index.js')
-//     .pipe(webpackStream(webpackConfigDev), webpack)
-//     .pipe(dest('src/js'))
-//   browsersync.reload()
-//   cb()
-// }
+function jsDev(cb) {
+  src('src/js/index.js')
+    .pipe(webpackStream(webpackConfigDev), webpack)
+    .pipe(dest('src/js'))
+  browsersync.reload()
+  cb()
+}
 
 
 
 function html(cb) {
   // src('src/**/*.html')
   watch('src/**/*.html', series(html, browsersync.reload))
+
   cb()
 }
 
 function bSync(cb) {
   browsersync.init(syncOpts)
   watch(source + 'js/index.js', jsDev)
+
   cb()
 }
 
+function cssMin(cb) {
+  src('src/css/**/*.css')
+    .pipe(cssnano())
+    .pipe(dest('dist/css'))
+
+  cb()
+}
+
+
+function copyAssets(cb) {
+  const html = 'src/**/*.html';
+
+  src([html], {
+    base: 'src',
+  })
+
+    .pipe(dest('dist'))
+  cb()
+
+}
+
 exports.default = series(styles, jsDev, html, bSync, watchFiles);
-exports.test = jsProd;
+exports.build = series(copyAssets, cssMin, jsProd);
