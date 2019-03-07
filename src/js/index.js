@@ -1,3 +1,3 @@
 const x = (arg) => alert(arg);
 
-x('hahahsafasfasfasasffasaha');
+// x('Gulp 4 boilerplate');
